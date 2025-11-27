@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Laplace Equation Solution for Rectangular Metallic Tube
+Electrodynamics - Universidad Autónoma del Estado de México
+
+Author: I.I. D. Cortés
+Email: ileonc001@alumno.uaemex.mx
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+def electrostatic_potential(X, Y, n_terms, V0, b, a):
+    """
+    Calculate electrostatic potential using Fourier series solution
+    to Laplace's equation for rectangular boundary conditions.
+    
+    Parameters:
+    X, Y: meshgrid coordinates
+    n_terms: number of terms in Fourier series
+    V0: constant potential at x=±b
+    b: half-width of tube
+    a: height of tube
+    
+    Returns:
+    Z: potential distribution V(x,y)
+    """
+    Z = np.zeros_like(X)
+    for i in range(n_terms):
+        n = 2*i + 1  # Odd terms only
+        coefficient = (4*V0) / (n * np.pi * np.cosh(n * np.pi * b / a))
+        Z += coefficient * np.sin(n * np.pi * Y / a) * np.cosh(n * np.pi * X / a)
+    return Z
+
+def main():
+    """Main function to execute the potential visualization"""
+    
+    # Create figure
+    fig = plt.figure(figsize=(12, 5))
+    
+    # Print problem description
+    print('\n' + '='*60)
+    print("LAPLACE EQUATION SOLUTION FOR RECTANGULAR METALLIC TUBE")
+    print('='*60)
+    print("Problem: Two infinitely long metallic plates at y=0 and y=a,")
+    print("connected by metallic strips at x=±b at constant potential V₀.")
+    print('='*60)
+    
+    # Get user input with validation
+    try:
+        A = float(input("Enter the height a = "))
+        B = float(input("Enter the half-width b = "))
+        V = float(input("Enter the constant potential V₀ = "))
+        N = int(input("Enter number of Fourier terms N (≤100 for best precision) = "))
+        
+        if N > 100:
+            print("Warning: High N values may slow down computation.")
+        
+        # Create mesh grid
+        x = np.linspace(-B, B, 50)
+        y = np.linspace(0, A, 50)
+        X, Y = np.meshgrid(x, y)
+        
+        # Calculate potential
+        Z = electrostatic_potential(X, Y, N, V, B, A)
+        
+        # Create 3D plot
+        ax1 = fig.add_subplot(121, projection='3d')
+        wire = ax1.plot_wireframe(X, Y, Z, color='blue', alpha=0.6)
+        ax1.set_xlabel('X')
+        ax1.set_ylabel('Y')
+        ax1.set_zlabel('Potential V(x,y)')
+        ax1.set_title('3D Wireframe - Potential Distribution')
+        
+        # Create 2D contour plot
+        ax2 = fig.add_subplot(122)
+        contour = ax2.contourf(X, Y, Z, levels=20, cmap='viridis')
+        plt.colorbar(contour, ax=ax2, label='Potential V(x,y)')
+        ax2.set_xlabel('X')
+        ax2.set_ylabel('Y')
+        ax2.set_title('2D Contour - Equipotential Lines')
+        ax2.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig('laplace_solution.png', dpi=300, bbox_inches='tight')
+        print(f"\nPlot saved as 'laplace_solution.png'")
+        
+        # Display solution info
+        print(f"\nSolution Parameters:")
+        print(f"Height (a): {A}")
+        print(f"Half-width (b): {B}")
+        print(f"Potential (V₀): {V}")
+        print(f"Fourier terms: {N}")
+        print(f"Potential range: {Z.min():.3f} to {Z.max():.3f}")
+        
+        plt.show()
+        
+    except ValueError:
+        print("Error: Please enter valid numerical values.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()
